@@ -13,8 +13,8 @@ It does not provide the same functionality as Pleroma's, but it should be flexib
 ## WARNING PLEASE READ.
 
 `dmrf`, at its core, is **TRUSTED EVAL**. This is required to let plugins do anything they want, this gives flexibility
-at the cost of malicious scripts being able to e.g ship off all your messages to an `evil-server.net`. Users are recommended
-to write their own scripts or apply extreme scrutiny to `dmrf` scripts they find on the web.
+at the cost of potentially malicious scripts being able to, for example, ship off all your messages to an `evil-server.net`.
+Users are recommended to write their own scripts or apply extreme scrutiny to `dmrf` scripts they find on the web.
 
 `dmrf` will NOT provide built-in toggles for built-in MRF scripts, but a guide is provided here.
 
