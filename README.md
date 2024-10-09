@@ -72,10 +72,10 @@ module.exports = {
   },
   receiveHook: async (msg, reject, forward) => {
     if (msg.content.includes("Among Us")) {
-		return reject("IM TIRED OF SEEING IT");
-	} else {
-		return forward(msg);
-	}
+      return reject("IM TIRED OF SEEING IT");
+    } else {
+      return forward(msg);
+    }
   }
 }
 ```
