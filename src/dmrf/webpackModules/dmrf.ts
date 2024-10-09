@@ -52,6 +52,9 @@ async function reDispatcher(event: any) {
   }
 }
 
+// make the Dispatcher interceptor async by fisrt always dropping events
+// then re-dispatching them with a flag (event.dmrf) to prevent infinite recursion
+// (if the event is supposed to be dropped, simply don't redispatch)
 Dispatcher.addInterceptor((event) => {
   if (event.dmrf) return false;
 

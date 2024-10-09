@@ -5,15 +5,15 @@
   "dependencies": ["spacepack"],
   "meta": {
     "name": "Discord Message Rewrite Facility",
-    "tagline": "dont use this yet",
-    "description": "dont use this yet. simply dont",
+    "tagline": "A small subset of Pleroma's MRF subsystem, now via Moonlight!",
+    "description": "Read the original repository for more information and docs to write MRF scripts",
     "authors": ["lun-4"],
     "source": "https://github.com/lun-4/dmrf"
   },
   "settings": {
     "mrfScripts": {
       "displayName": "MRF Scripts",
-      "description": "List of scripts to execute MRF",
+      "description": "List of scripts to execute MRF from",
       "type": "list",
       "default": []
     }
