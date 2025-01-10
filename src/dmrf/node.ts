@@ -42,6 +42,10 @@ async function receiveHook(msg: any): Promise<boolean> {
 }
 
 async function sendHook(msg: any): Promise<any> {
+  if (msg.content.startsWith("!nodmrf ")) {
+    msg.content = msg.content.replaceAll("!nodmrf ", "");
+    return msg;
+  }
   for (const mrf of loaded_mrfs) {
     let forwardFunction = (newMsg: any) => {
       msg = newMsg;
