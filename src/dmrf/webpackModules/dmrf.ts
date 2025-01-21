@@ -30,20 +30,25 @@ async function reDispatcher(event: any) {
   // set all message content in messages array
   // NOTE thank u husky
   if (event.type === "LOAD_MESSAGES_SUCCESS") {
-    if (event.hasOwnProperty("messages") && Array.isArray(event.messages)) {
-      event.messages.filter((message: any) => {
-        if (
-          message.hasOwnProperty("content") &&
-          typeof message.content === "string"
-        ) {
-          return !natives.receiveHook(message);
+    if ("messages" in event && Array.isArray(event.messages)) {
+      const newMessages = [];
+      // NOTE(cyn): i dont remember if filter allows async, so using a normal for loop
+      for (let message of event.messages) {
+        if ("content" in message && typeof message.content === "string") {
+          const { allow, msg } = await natives.receiveHook(message);
+          if (!allow) continue;
+          message = msg;
+          newMessages.push(message);
         }
-      });
+      }
+      event.messages = newMessages;
       event.dmrf = true;
       if (event.messages) Dispatcher.dispatch(event);
     }
   } else if (event.type == "MESSAGE_CREATE") {
-    const drop = !(await natives.receiveHook(event.message));
+    const { allow, msg } = await natives.receiveHook(event.message);
+    event.message = msg;
+    const drop = !allow;
     event.dmrf = true;
     logger.debug("drop?", event.message.id, "?", drop);
     if (!drop) Dispatcher.dispatch(event);
