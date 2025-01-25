@@ -8,7 +8,7 @@ function init() {
   let scripts =
     moonlightNode.getConfigOption<string[]>("dmrf", "mrfScripts") ?? [];
   loaded_mrfs = scripts.map((scriptPath) => {
-    logger.info("[dmrf] Loading MRF: ", scriptPath);
+    logger.info("Loading MRF: ", scriptPath);
     const mrf = require(scriptPath);
     if (mrf.init) {
       mrf.init();
