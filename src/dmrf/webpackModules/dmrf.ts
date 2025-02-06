@@ -40,6 +40,9 @@ MessageActionCreators.sendMessage = async function (
 MessageActionCreators.editMessage = async function (
   ...args: any[]
 ): Promise<any> {
+  if (moonlight.getConfigOption<boolean>("dmrf", "allowEdit") === false)
+    return originalEdit.call(MessageActionCreators, ...args);
+
   const result = await hook(args[2], "editMessage");
   if (result === false) return;
   args[2] = result;
