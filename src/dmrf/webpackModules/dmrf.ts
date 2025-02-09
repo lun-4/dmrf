@@ -42,8 +42,7 @@ MessageActionCreators.editMessage = async function (
     return originalEdit.call(MessageActionCreators, ...args);
 
   const result = await hook(args[2], "editMessage");
-  if (result === false) return;
-  args[2] = result;
+  if (result != null) args[2] = result;
 
   return originalEdit.call(MessageActionCreators, ...args);
 };
