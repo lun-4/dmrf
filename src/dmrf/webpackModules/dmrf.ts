@@ -19,9 +19,8 @@ async function hook(message: any, name: string): Promise<boolean | any> {
   const result = await natives.sendHook(message);
   logger.debug(`${name} - Result:`, result);
   if (result == null) {
-    // NOTE(cyn): this error seems redundant now?
-    logger.error(`${name} - Dropping on sendHook not supported yet`);
-    return false;
+    logger.error(`${name} - Dropping on sendHook not supported`);
+    return;
   }
 
   return result;
@@ -31,8 +30,7 @@ MessageActionCreators.sendMessage = async function (
   ...args: any[]
 ): Promise<any> {
   const result = await hook(args[1], "sendMessage");
-  if (result === false) return;
-  args[1] = result;
+  if (result != null) args[1] = result;
 
   return originalSend.call(MessageActionCreators, ...args);
 };
