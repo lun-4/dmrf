@@ -31,9 +31,9 @@ export const webpackModules: Record<string, ExtensionWebpackModule> = {
   dmrf: {
     entrypoint: true,
     dependencies: [
-      'Queueing message to be sent',
       { ext: "spacepack", id: "spacepack" },
       { id: "discord/Dispatcher" },
+      { id: "discord/actions/MessageActionCreators" }
     ]
   }
 };

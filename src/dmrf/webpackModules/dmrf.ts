@@ -2,51 +2,90 @@ import spacepack from "@moonlight-mod/wp/spacepack_spacepack";
 import Dispatcher from "@moonlight-mod/wp/discord/Dispatcher";
 import { DMRFNatives } from "../types";
 
-const COOL = "Queueing message to be sent";
-const module = spacepack.findByCode(COOL)[0].exports;
+const MessageActionCreators = spacepack.require(
+  "discord/actions/MessageActionCreators"
+).default;
 
 const natives: DMRFNatives = moonlight.getNatives("dmrf");
 const logger = moonlight.getLogger("dmrf");
 
 natives.init();
 
-const originalSend = module.Z.sendMessage;
-module.Z.sendMessage = async (...args: any[]) => {
-  logger.trace("got sendMessage");
-  const message = args[1];
-  logger.trace("handling sendMessage", message);
+const originalSend = MessageActionCreators.sendMessage;
+const originalEdit = MessageActionCreators.editMessage;
+
+async function hook(message: any, name: string): Promise<boolean | any> {
+  logger.debug(`Hooking ${name}`);
   const result = await natives.sendHook(message);
-  logger.trace("handled", result);
+  logger.debug(`${name} - Result:`, result);
   if (result == null) {
-    logger.error("dropping on sendHook not supported yet");
+    logger.error(`${name} - Dropping on sendHook not supported`);
     return;
   }
-  args[1] = result;
-  return originalSend.call(module.Z, ...args);
+
+  return result;
+}
+
+MessageActionCreators.sendMessage = async function (
+  ...args: any[]
+): Promise<any> {
+  const result = await hook(args[1], "sendMessage");
+  if (result != null) args[1] = result;
+
+  return originalSend.call(MessageActionCreators, ...args);
 };
 
+MessageActionCreators.editMessage = async function (
+  ...args: any[]
+): Promise<any> {
+  if (moonlight.getConfigOption<boolean>("dmrf", "allowEdit") === false)
+    return originalEdit.call(MessageActionCreators, ...args);
+
+  const result = await hook(args[2], "editMessage");
+  if (result != null) args[2] = result;
+
+  return originalEdit.call(MessageActionCreators, ...args);
+};
+
+const EVENTS_BULK = [
+  "LOAD_MESSAGES_SUCCESS",
+  "LOAD_MESSAGES_AROUND_SUCCESS",
+  "LOCAL_MESSAGES_LOADED"
+];
+const EVENTS_SINGLE = ["MESSAGE_CREATE", "MESSAGE_UPDATE"];
+const ALL_EVENTS = [...EVENTS_BULK, ...EVENTS_SINGLE];
+
 async function reDispatcher(event: any) {
-  logger.trace("redispatch", event.type);
+  logger.debug("redispatch", event.type);
   // set all message content in messages array
-  // NOTE thank u husky
-  if (event.type === "LOAD_MESSAGES_SUCCESS") {
-    if (event.hasOwnProperty("messages") && Array.isArray(event.messages)) {
-      event.messages.filter((message: any) => {
-        if (
-          message.hasOwnProperty("content") &&
-          typeof message.content === "string"
-        ) {
-          return !natives.receiveHook(message);
+  // NOTE: thank u husky
+  if (EVENTS_BULK.includes(event.type)) {
+    logger.debug("redispatching bulk event", event.messages);
+    if (event.messages != null && Array.isArray(event.messages)) {
+      const newMessages = [];
+      // NOTE(cyn): i dont remember if filter allows async, so using a normal for loop
+      for (let message of event.messages) {
+        if (message.content != null && typeof message.content === "string") {
+          const { allow, msg } = await natives.receiveHook(message);
+          if (!allow) continue;
+          message = msg;
+          newMessages.push(message);
+        } else {
+          // NOTE(cyn): just to be safe
+          newMessages.push(message);
         }
-      });
+      }
+      event.messages = newMessages;
       event.dmrf = true;
       if (event.messages) Dispatcher.dispatch(event);
     }
-  } else if (event.type == "MESSAGE_CREATE") {
-    const drop = !(await natives.receiveHook(event.message));
+  } else if (EVENTS_SINGLE.includes(event.type)) {
+    logger.debug("redispatching single event", event.message);
+    const { allow, msg } = await natives.receiveHook(event.message);
+    event.message = msg;
     event.dmrf = true;
-    logger.debug("drop?", event.message.id, "?", drop);
-    if (!drop) Dispatcher.dispatch(event);
+    logger.debug("drop?", event.message.id, "?", !allow);
+    if (allow) Dispatcher.dispatch(event);
   } else {
     logger.error("dmrf redispatcher got incorrect event type " + event.type);
   }
@@ -58,10 +97,7 @@ async function reDispatcher(event: any) {
 Dispatcher.addInterceptor((event) => {
   if (event.dmrf) return false;
 
-  if (event.type === "LOAD_MESSAGES_SUCCESS") {
-    reDispatcher(event);
-    return true;
-  } else if (event.type == "MESSAGE_CREATE") {
+  if (ALL_EVENTS.includes(event.type)) {
     reDispatcher(event);
     return true;
   } else {

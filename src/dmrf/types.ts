@@ -1,9 +1,9 @@
 export interface ForwardFunction {
-  (message: any): void
+  (message: any): void;
 }
 
 export interface RejectFunction {
-  (errorMessage: string): void
+  (errorMessage: string): void;
 }
 
 export interface SendHook {
@@ -15,19 +15,19 @@ export interface ReceiveHook {
 }
 
 export interface MRFSpec {
-  mrfVersion: number
-  name: string
+  mrfVersion: number;
+  name: string;
 }
 
 export interface MRF {
-  spec: MRFSpec
-  sendHook: SendHook
-  receiveHook: ReceiveHook
+  spec: MRFSpec;
+  sendHook: SendHook;
+  receiveHook: ReceiveHook;
 }
 
 // INTERNAL API ONLY
 export interface DMRFNatives {
   init(): any;
-  receiveHook(message: any): Promise<boolean>;
+  receiveHook(message: any): Promise<{ allow: boolean; msg: any }>;
   sendHook(message: any): Promise<boolean>;
-};
+}

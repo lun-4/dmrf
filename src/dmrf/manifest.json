@@ -16,6 +16,11 @@
       "description": "List of scripts to execute MRF from",
       "type": "list",
       "default": []
+    },
+    "allowEdit": {
+      "displayName": "Run scripts on edit",
+      "type": "boolean",
+      "default": true
     }
   }
 }

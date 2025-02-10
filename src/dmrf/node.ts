@@ -8,7 +8,7 @@ function init() {
   let scripts =
     moonlightNode.getConfigOption<string[]>("dmrf", "mrfScripts") ?? [];
   loaded_mrfs = scripts.map((scriptPath) => {
-    logger.info("[dmrf] Loading MRF: ", scriptPath);
+    logger.info("Loading MRF: ", scriptPath);
     const mrf = require(scriptPath);
     if (mrf.init) {
       mrf.init();
@@ -17,13 +17,15 @@ function init() {
   });
 }
 
-async function receiveHook(msg: any): Promise<boolean> {
+async function receiveHook(msg: any): Promise<{ allow: boolean; msg: any }> {
   for (const mrf of loaded_mrfs) {
-    let rejectFunction = (_: any) => {
+    let rejectFunction = (reason: string) => {
+      logger.info("dropped a message:", reason);
       return false;
     };
 
-    let forwardFunction = (_: any) => {
+    let forwardFunction = (newMsg: any) => {
+      msg = newMsg;
       return true;
     };
 
@@ -34,11 +36,11 @@ async function receiveHook(msg: any): Promise<boolean> {
         forwardFunction
       );
       if (!forwardMessage) {
-        return false;
+        return { allow: false, msg };
       }
     }
   }
-  return true;
+  return { allow: true, msg };
 }
 
 async function sendHook(msg: any): Promise<any> {
